@@ -4,6 +4,7 @@ import (
 	"finance-app/cmd/models"
 	"finance-app/cmd/service"
 	"finance-app/cmd/storage"
+	"finance-app/constants"
 	"fmt"
 	"net/http"
 
@@ -15,11 +16,15 @@ func Signup(c echo.Context) error {
 	err := c.Bind(&userInput)
 	if err != nil {
 		c.Logger().Error(err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
+	validMail := false
+	validMail, userInput.Email = service.SanitizeAndCheckEmail(userInput.Email)
+
+	validPass := service.CheckPass(userInput.Password)
 	//further checkes for pass will be on the frontend. This is additional
-	if userInput.Name == "" || userInput.Password == "" || userInput.Email == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+	if userInput.Name == "" || validPass && validMail {
+		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
 
 	//db search for email
@@ -27,25 +32,24 @@ func Signup(c echo.Context) error {
 
 	if err != nil {
 		c.Logger().Error(err)
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
 
 	if userAlreadyExists {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Email already exists"})
+		return constants.StatusBadRequest400(c, "Email already exists")
 	}
 
 	//get password hash to store
 	userInput.Password, err = service.HashPassword(userInput.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
 
 	err = storage.InsertUser(userInput)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
-
-	return c.JSON(http.StatusCreated, map[string]string{"msg": "Account Created"})
+	return constants.StatusCreated201(c, "Account Created")
 }
 
 func Login(c echo.Context) error {
@@ -53,20 +57,20 @@ func Login(c echo.Context) error {
 	err := c.Bind(&userInput)
 	if err != nil {
 		c.Logger().Error(err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
 	if userInput.Password == "" || userInput.Email == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
 
 	userDB, err := storage.GetUserWithEmail(userInput.Email)
 	//some error related to db
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	//email is not registered
 	if userDB == nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid email or password"})
+		return constants.StatusBadRequest400(c, "Invalid email or password")
 	}
 
 	//compare input password with hashed stored passwoord
@@ -77,7 +81,7 @@ func Login(c echo.Context) error {
 		jwtToken, err := service.CreateJWTToken(userDB.Id)
 		fmt.Println(userDB)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return constants.StatusInternalServerError500(c, err.Error())
 		}
 		// testID, err := service.ParseAndVerifyJWTToken(jwtToken)
 		// if err == nil {
@@ -89,7 +93,7 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, map[string]any{"token": fmt.Sprintf("bearer %v", jwtToken), "user": userDB})
 	}
 
-	return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid email or password"})
+	return constants.StatusBadRequest400(c, "Invalid email or password")
 
 }
 
@@ -99,34 +103,34 @@ func UpdatePassword(c echo.Context) error {
 	err := c.Bind(&userInput)
 	if err != nil {
 		c.Logger().Error(err)
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
 	if userInput.Password == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
 	userInput.Id = c.Get("id").(int)
 
 	oldPassword, err := storage.GetUserOldPasswordWithID(userInput.Id)
 	//some error related to db
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
 
 	//check if old is the same as new
 	samePassword := service.CheckPasswordHash(userInput.Password, oldPassword)
 	if samePassword {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "new password cannot be the same as old password"})
+		return constants.StatusBadRequest400(c, "new password cannot be the same as old password")
 	}
 
 	//get password hash for storing
 	userInput.Password, err = service.HashPassword(userInput.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
 
 	err = storage.UpdatePassword(userInput.Id, userInput.Password)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return constants.StatusInternalServerError500(c, err.Error())
 	}
-	return c.JSON(http.StatusAccepted, map[string]string{"error": "password updated successfully"})
+	return constants.StatusAccepted202(c, "password updated successfully")
 }

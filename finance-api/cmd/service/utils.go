@@ -4,7 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
+	"net/mail"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -73,4 +77,57 @@ func ParseAndVerifyJWTToken(tokenString string) (int, error) {
 	}
 
 	return int(userID), nil
+}
+
+func GeneratePassword() string {
+	const allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+-=[]{}\\|;':\",.<>/?`~0123456789"
+	patternNum, _ := regexp.Compile("[0-9]")
+	patternLower, _ := regexp.Compile("[a-z]")
+	patternUpper, _ := regexp.Compile("[A-Z]")
+	patternSpecial, _ := regexp.Compile("[\\^!@#$%\\^&*()_+\\-=[\\]{}\\|;':\\\",.<>/?`~]")
+
+	pass := make([]byte, 15)
+	for attempt := 0; attempt < 1; {
+		for i := 0; i < 15; i++ {
+			pass[i] = allowed[rand.Intn(len(allowed))]
+		}
+		result := string(pass)
+		if patternNum.MatchString(result) && patternLower.MatchString(result) && patternUpper.MatchString(result) && patternSpecial.MatchString(result) {
+			return result
+		}
+	}
+	return string(pass)
+}
+
+/*
+	Sanitization
+	Email
+	1. Reg exp => __@__
+	2. No spaces anywhere
+	3. Only 1 @
+	4. No . at the start or end
+	Passwords
+	1. Length check
+	2. Check for email, name, and common passswords
+	Name
+	1. Strip Spaces from front and back
+	2. Remove Special Characters
+	3. Only one space allowed between characters
+*/
+
+func SanitizeAndCheckEmail(email string) (bool, string) {
+	email = strings.Trim(email, " ")
+	if len(email) < 3 {
+		return false, ""
+	}
+	_, err := mail.ParseAddress(email)
+	return err == nil, email
+}
+func CheckPass(pass string) bool {
+	return len(pass) >= 8
+}
+func SanitizeAndCheckName(dirtyStr string) (bool, string) {
+	// dirtyStr = strings.Trim(dirtyStr, " ")
+	// cleanStr = []
+	return true, ""
 }
