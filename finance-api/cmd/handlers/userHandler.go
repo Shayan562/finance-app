@@ -79,6 +79,12 @@ func Login(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
+		// testID, err := service.ParseAndVerifyJWTToken(jwtToken)
+		// if err == nil {
+		// 	fmt.Printf("Extracted UserID: %d", testID)
+		// } else {
+		// 	fmt.Printf("Error with validation: %v", err.Error())
+		// }
 		userDB.Password = ""
 		return c.JSON(http.StatusAccepted, map[string]any{"token": fmt.Sprintf("bearer %v", jwtToken), "user": userDB})
 	}
@@ -98,6 +104,7 @@ func UpdatePassword(c echo.Context) error {
 	if userInput.Password == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 	}
+	userInput.Id = c.Get("id").(int)
 
 	oldPassword, err := storage.GetUserOldPasswordWithID(userInput.Id)
 	//some error related to db
