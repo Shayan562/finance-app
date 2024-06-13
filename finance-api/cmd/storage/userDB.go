@@ -24,6 +24,19 @@ func GetUserWithEmail(userEmail string) (*models.User, error) {
 	return &user, nil
 }
 
+func GetUserOldPasswordWithID(userID int) (string, error) {
+	var user models.User
+	if db == nil {
+		return "", errors.New("could not connect to the db")
+	}
+	//query
+	err := db.Model(&models.User{}).Where("id =?", userID).Select("password").Find(&user).Error
+	if err != nil {
+		return "", err
+	}
+	return user.Password, nil
+}
+
 func IsEmailInUse(userEmail string) (bool, error) {
 	var count int64
 	//db error
@@ -39,6 +52,18 @@ func IsEmailInUse(userEmail string) (bool, error) {
 }
 
 func InsertUser(userObj models.User) error {
+	//db error
+	if db == nil {
+		return errors.New("could not connect to the db")
+	}
 	err := db.Create(&userObj).Error
+	return err
+}
+func UpdatePassword(userID int, newPassword string) error {
+	//db error
+	if db == nil {
+		return errors.New("could not connect to the db")
+	}
+	err := db.Model(&models.User{}).Where("id = ?", userID).Update("password", newPassword).Error
 	return err
 }

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -39,6 +38,6 @@ func CreateJWTToken(id int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(tokenString)
+	// fmt.Println(tokenString)
 	return tokenString, nil
 }
