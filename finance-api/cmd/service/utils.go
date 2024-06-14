@@ -191,9 +191,5 @@ func SanitizeAndCheckName(name string) (string, error) {
 	if name == "" {
 		return "", errors.New("name too small")
 	}
-	// name = strings.ToValidUTF8(name,"")
-	// name =  strings.ReplaceAll(name,"  ","")
-	// dirtyStr = strings.Trim(dirtyStr, " ")
-	// cleanStr = []
 	return name, nil
 }

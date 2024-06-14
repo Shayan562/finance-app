@@ -7,6 +7,7 @@ import (
 	"finance-app/constants"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -72,10 +73,6 @@ func Login(c echo.Context) error {
 		return constants.StatusBadRequest400(c, err.Error())
 	}
 	//checking pass
-	// err = service.CheckPass(userInput.Password, userInput.Name, userInput.Email)
-	// if err != nil {
-	// 	return constants.StatusBadRequest400(c, err.Error())
-	// }
 	if userInput.Password == "" {
 		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
@@ -96,16 +93,9 @@ func Login(c echo.Context) error {
 	//if matched gennerate jwt token
 	if correctPassword {
 		jwtToken, err := service.CreateJWTToken(userDB.Id)
-		// fmt.Println(userDB)
 		if err != nil {
 			return constants.StatusInternalServerError500(c, err.Error())
 		}
-		// testID, err := service.ParseAndVerifyJWTToken(jwtToken)
-		// if err == nil {
-		// 	fmt.Printf("Extracted UserID: %d", testID)
-		// } else {
-		// 	fmt.Printf("Error with validation: %v", err.Error())
-		// }
 		userDB.Password = ""
 		return c.JSON(http.StatusAccepted, map[string]any{"token": fmt.Sprintf("bearer %v", jwtToken), "user": userDB})
 	}
@@ -157,9 +147,19 @@ func UpdatePassword(c echo.Context) error {
 	return constants.StatusAccepted202(c, "password updated successfully")
 }
 func ForgotPassword(c echo.Context) error {
-	email := c.QueryParam("email")
+	userInput := models.User{}
+	//extracting new password and id from the body
+	err := c.Bind(&userInput)
+	if err != nil {
+		c.Logger().Error(err)
+		return constants.StatusBadRequest400(c, "invalid request body")
+	}
+	if userInput.Email == "" {
+		return constants.StatusBadRequest400(c, "invalild email")
+	}
+	// email := c.QueryParam("email")
 
-	emailInUse, err := storage.IsEmailInUse(email)
+	emailInUse, err := storage.IsEmailInUse(userInput.Email)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
@@ -168,18 +168,21 @@ func ForgotPassword(c echo.Context) error {
 	}
 
 	//here use thrid party mail to update and set a new password
-	newPassword := service.GeneratePassword()
+	userInput.Password = service.GeneratePassword()
 	//first send password to user then update it
-	err = service.SendMail(email, newPassword)
+	currTime := time.Now()
+	err = service.SendMail(userInput.Email, userInput.Password)
+	endTime := time.Since(currTime)
+	fmt.Printf("TIme taken: %v\n", endTime)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	//generate passwoord hash
-	newPassword, err = service.HashPassword(newPassword)
+	userInput.Password, err = service.HashPassword(userInput.Password)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
-	err = storage.UpdatePasswordWithEmail(email, newPassword)
+	err = storage.UpdatePasswordWithEmail(userInput.Email, userInput.Password)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}

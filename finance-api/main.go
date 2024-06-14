@@ -16,7 +16,7 @@ func main() {
 	// e.Use(middleware.Logger())
 	e.POST("/signup", handlers.Signup)
 	e.POST("/login", handlers.Login)
-	e.GET("/forgot-password", handlers.ForgotPassword)
+	e.POST("/forgot-password", handlers.ForgotPassword)
 	e.PATCH("/update-password", handlers.UpdatePassword, middlewares.AuthMiddleware)
 
 	// e.GET("/test", func(c echo.Context) error {
@@ -33,5 +33,6 @@ func main() {
 	// defer storage.CloseConnection()
 
 	e.Logger.Fatal((e.Start(":8081")))
+	// defer fmt.Println("EEnding")
 
 }
