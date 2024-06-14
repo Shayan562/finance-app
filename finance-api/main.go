@@ -6,14 +6,17 @@ import (
 	"finance-app/middlewares"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	e := echo.New()
 
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
 	// e.Use(middleware.Logger())
 	e.POST("/signup", handlers.Signup)
 	e.POST("/login", handlers.Login)
+	e.GET("/forgot-password", handlers.ForgotPassword)
 	e.PATCH("/update-password", handlers.UpdatePassword, middlewares.AuthMiddleware)
 
 	// e.GET("/test", func(c echo.Context) error {
@@ -24,13 +27,10 @@ func main() {
 	// 		return c.JSON(301, err.Error())
 	// 	}
 	// 	return c.JSON(200, userInput)
-
 	// }, middlewares.AuthMiddleware)
 
-	// strTest, _ := service.CreateJWTToken(123)
-	// fmt.Printf("Token: %v", strTest)
-
 	storage.ConnectToDB()
+	// defer storage.CloseConnection()
 
 	e.Logger.Fatal((e.Start(":8081")))
 

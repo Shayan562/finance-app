@@ -24,11 +24,6 @@ func Signup(c echo.Context) error {
 	if err != nil {
 		return constants.StatusBadRequest400(c, err.Error())
 	}
-	//sanitizing name
-	userInput.Name, err = service.SanitizeAndCheckName(userInput.Name)
-	if err != nil {
-		return constants.StatusBadRequest400(c, err.Error())
-	}
 	//db search for email
 	userAlreadyExists, err := storage.IsEmailInUse(userInput.Email)
 	if err != nil {
@@ -37,6 +32,11 @@ func Signup(c echo.Context) error {
 	}
 	if userAlreadyExists {
 		return constants.StatusBadRequest400(c, "email already exists")
+	}
+	//sanitizing name
+	userInput.Name, err = service.SanitizeAndCheckName(userInput.Name)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
 	}
 
 	//checking password
@@ -150,30 +150,39 @@ func UpdatePassword(c echo.Context) error {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 
-	err = storage.UpdatePassword(userInput.Id, userInput.Password)
+	err = storage.UpdatePasswordWithID(userInput.Id, userInput.Password)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	return constants.StatusAccepted202(c, "password updated successfully")
 }
 func ForgotPassword(c echo.Context) error {
-	userInput := models.User{}
-	//email the body
-	err := c.Bind(&userInput)
-	if err != nil {
-		c.Logger().Error(err)
-		return constants.StatusBadRequest400(c, "invalid request body")
-	}
+	email := c.QueryParam("email")
 
-	emailInUse, err := storage.IsEmailInUse(userInput.Email)
+	emailInUse, err := storage.IsEmailInUse(email)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	if !(emailInUse) {
-		return constants.StatusNotFound404(c, "email was not registered")
+		return constants.StatusNotFound404(c, "email is not registered")
 	}
 
 	//here use thrid party mail to update and set a new password
+	newPassword := service.GeneratePassword()
+	//first send password to user then update it
+	err = service.SendMail(email, newPassword)
+	if err != nil {
+		return constants.StatusInternalServerError500(c, err.Error())
+	}
+	//generate passwoord hash
+	newPassword, err = service.HashPassword(newPassword)
+	if err != nil {
+		return constants.StatusInternalServerError500(c, err.Error())
+	}
+	err = storage.UpdatePasswordWithEmail(email, newPassword)
+	if err != nil {
+		return constants.StatusInternalServerError500(c, err.Error())
+	}
 
 	return constants.StatusAccepted202(c, "new password has been sent on the registered email")
 

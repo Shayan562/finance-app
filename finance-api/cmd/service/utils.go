@@ -86,9 +86,10 @@ func GeneratePassword() string {
 	patternUpper, _ := regexp.Compile("[A-Z]")
 	patternSpecial, _ := regexp.Compile("[\\^!@#$%\\^&*()_+\\-=[\\]{}\\|;':\\\",.<>/?`~]")
 
-	pass := make([]byte, 15)
+	passLen := rand.Intn(10) + 16
+	pass := make([]byte, passLen)
 	for attempt := 0; attempt < 1; {
-		for i := 0; i < 15; i++ {
+		for i := 0; i < passLen; i++ {
 			pass[i] = allowed[rand.Intn(len(allowed))]
 		}
 		result := string(pass)
@@ -153,7 +154,19 @@ func CheckPass(pass string, name string, email string) error {
 	if emailRegexp.MatchString(pass) {
 		return errors.New("password cannot contain your email")
 	}
-	//checking for length and other requirements
+	//checking for common terms
+	terms := []string{"(?i)password", "(?i)admin", "(?i)pass123"}
+	for _, t := range terms {
+		//user for ignoring case
+		termRegexp, err := regexp.Compile(t)
+		if err != nil {
+			return err
+		}
+		if termRegexp.MatchString(pass) {
+			return errors.New("password cannot contain common terms like password")
+		}
+	}
+	//checking for other requirements
 	patternNum, _ := regexp.Compile("[0-9]")
 	patternLower, _ := regexp.Compile("[a-z]")
 	patternUpper, _ := regexp.Compile("[A-Z]")

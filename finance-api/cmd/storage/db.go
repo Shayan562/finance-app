@@ -39,3 +39,8 @@ func ConnectToDB() {
 func GetDB() *gorm.DB {
 	return db
 }
+
+func CloseConnection() {
+	instance, _ := db.DB()
+	instance.Close()
+}

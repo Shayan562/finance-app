@@ -13,7 +13,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		token := c.Request().Header.Get("Authorization")
 		//extracting token
 		token = strings.Split(token, " ")[1]
-		token = token[:len(token)-1]
+		// token = token[:len(token)-1]
 		//extracting id
 		userID, _ := service.ParseAndVerifyJWTToken(token)
 		if userID == -1 {

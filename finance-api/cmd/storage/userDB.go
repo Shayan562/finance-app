@@ -74,11 +74,18 @@ func InsertUser(userObj models.User) error {
 	err := db.Create(&userObj).Error
 	return err
 }
-func UpdatePassword(userID int, newPassword string) error {
+func UpdatePasswordWithID(userID int, newPassword string) error {
 	//db error
 	if db == nil {
 		return errors.New("could not connect to the db")
 	}
 	err := db.Model(&models.User{}).Where("id = ?", userID).Update("password", newPassword).Error
+	return err
+}
+func UpdatePasswordWithEmail(userEmail string, newPassword string) error {
+	if db == nil {
+		return errors.New("could not connect to the db")
+	}
+	err := db.Model(&models.User{}).Where("email=?", userEmail).Update("password", newPassword).Error
 	return err
 }
