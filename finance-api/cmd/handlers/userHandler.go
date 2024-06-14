@@ -16,27 +16,33 @@ func Signup(c echo.Context) error {
 	err := c.Bind(&userInput)
 	if err != nil {
 		c.Logger().Error(err)
-		return constants.StatusBadRequest400(c, "Invalid request body")
-	}
-	validMail := false
-	validMail, userInput.Email = service.SanitizeAndCheckEmail(userInput.Email)
-
-	validPass := service.CheckPass(userInput.Password)
-	//further checkes for pass will be on the frontend. This is additional
-	if userInput.Name == "" || validPass && validMail {
-		return constants.StatusBadRequest400(c, "Invalid request body")
+		return constants.StatusBadRequest400(c, "invalid request body")
 	}
 
+	//saitizing email
+	userInput.Email, err = service.SanitizeAndCheckEmail(userInput.Email)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
+	}
+	//sanitizing name
+	userInput.Name, err = service.SanitizeAndCheckName(userInput.Name)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
+	}
 	//db search for email
 	userAlreadyExists, err := storage.IsEmailInUse(userInput.Email)
-
 	if err != nil {
 		c.Logger().Error(err)
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
-
 	if userAlreadyExists {
-		return constants.StatusBadRequest400(c, "Email already exists")
+		return constants.StatusBadRequest400(c, "email already exists")
+	}
+
+	//checking password
+	err = service.CheckPass(userInput.Password, userInput.Name, userInput.Email)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
 	}
 
 	//get password hash to store
@@ -49,7 +55,7 @@ func Signup(c echo.Context) error {
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
-	return constants.StatusCreated201(c, "Account Created")
+	return constants.StatusCreated201(c, "account created")
 }
 
 func Login(c echo.Context) error {
@@ -57,9 +63,20 @@ func Login(c echo.Context) error {
 	err := c.Bind(&userInput)
 	if err != nil {
 		c.Logger().Error(err)
-		return constants.StatusBadRequest400(c, "Invalid request body")
+		return constants.StatusBadRequest400(c, "invalid request body")
 	}
-	if userInput.Password == "" || userInput.Email == "" {
+	//checkig again is not big deal since the valule set will already be i accordace with us
+	//checking emaill
+	userInput.Email, err = service.SanitizeAndCheckEmail(userInput.Email)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
+	}
+	//checking pass
+	// err = service.CheckPass(userInput.Password, userInput.Name, userInput.Email)
+	// if err != nil {
+	// 	return constants.StatusBadRequest400(c, err.Error())
+	// }
+	if userInput.Password == "" {
 		return constants.StatusBadRequest400(c, "Invalid request body")
 	}
 
@@ -70,7 +87,7 @@ func Login(c echo.Context) error {
 	}
 	//email is not registered
 	if userDB == nil {
-		return constants.StatusBadRequest400(c, "Invalid email or password")
+		return constants.StatusBadRequest400(c, "invalid email or password")
 	}
 
 	//compare input password with hashed stored passwoord
@@ -79,7 +96,7 @@ func Login(c echo.Context) error {
 	//if matched gennerate jwt token
 	if correctPassword {
 		jwtToken, err := service.CreateJWTToken(userDB.Id)
-		fmt.Println(userDB)
+		// fmt.Println(userDB)
 		if err != nil {
 			return constants.StatusInternalServerError500(c, err.Error())
 		}
@@ -93,7 +110,7 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusAccepted, map[string]any{"token": fmt.Sprintf("bearer %v", jwtToken), "user": userDB})
 	}
 
-	return constants.StatusBadRequest400(c, "Invalid email or password")
+	return constants.StatusBadRequest400(c, "invalid email or password")
 
 }
 
@@ -103,21 +120,26 @@ func UpdatePassword(c echo.Context) error {
 	err := c.Bind(&userInput)
 	if err != nil {
 		c.Logger().Error(err)
-		return constants.StatusBadRequest400(c, "Invalid request body")
-	}
-	if userInput.Password == "" {
-		return constants.StatusBadRequest400(c, "Invalid request body")
+		return constants.StatusBadRequest400(c, "invalid request body")
 	}
 	userInput.Id = c.Get("id").(int)
-
-	oldPassword, err := storage.GetUserOldPasswordWithID(userInput.Id)
+	//early return if password not provided
+	if userInput.Password == "" {
+		return constants.StatusBadRequest400(c, "invalid request body")
+	}
+	//get user data for password creation
+	user, err := storage.GetUserWithID(userInput.Id)
 	//some error related to db
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
+	err = service.CheckPass(userInput.Password, user.Name, user.Email)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
+	}
 
 	//check if old is the same as new
-	samePassword := service.CheckPasswordHash(userInput.Password, oldPassword)
+	samePassword := service.CheckPasswordHash(userInput.Password, user.Password)
 	if samePassword {
 		return constants.StatusBadRequest400(c, "new password cannot be the same as old password")
 	}
@@ -133,4 +155,26 @@ func UpdatePassword(c echo.Context) error {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	return constants.StatusAccepted202(c, "password updated successfully")
+}
+func ForgotPassword(c echo.Context) error {
+	userInput := models.User{}
+	//email the body
+	err := c.Bind(&userInput)
+	if err != nil {
+		c.Logger().Error(err)
+		return constants.StatusBadRequest400(c, "invalid request body")
+	}
+
+	emailInUse, err := storage.IsEmailInUse(userInput.Email)
+	if err != nil {
+		return constants.StatusInternalServerError500(c, err.Error())
+	}
+	if !(emailInUse) {
+		return constants.StatusNotFound404(c, "email was not registered")
+	}
+
+	//here use thrid party mail to update and set a new password
+
+	return constants.StatusAccepted202(c, "new password has been sent on the registered email")
+
 }

@@ -18,6 +18,9 @@ func StatusAccepted202(c echo.Context, msg string) error {
 func StatusBadRequest400(c echo.Context, err string) error {
 	return c.JSON(http.StatusBadRequest, map[string]string{"error": err})
 }
+func StatusUnauthorized401(c echo.Context, err string) error {
+	return c.JSON(http.StatusUnauthorized, map[string]string{"error": err})
+}
 func StatusUnknownForbidden403(c echo.Context, err string) error {
 	return c.JSON(http.StatusForbidden, map[string]string{"error": err})
 }

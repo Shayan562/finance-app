@@ -115,19 +115,72 @@ func GeneratePassword() string {
 	3. Only one space allowed between characters
 */
 
-func SanitizeAndCheckEmail(email string) (bool, string) {
+func SanitizeAndCheckEmail(email string) (string, error) {
 	email = strings.Trim(email, " ")
 	if len(email) < 3 {
-		return false, ""
+		return "", errors.New("invalid email")
 	}
 	_, err := mail.ParseAddress(email)
-	return err == nil, email
+	return email, err
 }
-func CheckPass(pass string) bool {
-	return len(pass) >= 8
+
+func CheckPass(pass string, name string, email string) error {
+	if len(pass) < 8 {
+		return errors.New("password must be atleast 8 characters long")
+	}
+	//checking for the users name in password
+	names := strings.Split(name, " ")
+	for _, n := range names {
+		//user for ignoring case
+		namePattern := "(?i)" + regexp.QuoteMeta(n)
+		nameRegexp, err := regexp.Compile(namePattern)
+		if err != nil {
+			return err
+		}
+
+		if nameRegexp.MatchString(pass) {
+			return errors.New("password cannot contain your name")
+		}
+	}
+	//checking for the users email in password
+	email = strings.Split(email, "@")[0]
+	email = strings.Trim(email, " ")
+	email = "(?i)" + regexp.QuoteMeta(email)
+	emailRegexp, err := regexp.Compile(email)
+	if err != nil {
+		return err
+	}
+	if emailRegexp.MatchString(pass) {
+		return errors.New("password cannot contain your email")
+	}
+	//checking for length and other requirements
+	patternNum, _ := regexp.Compile("[0-9]")
+	patternLower, _ := regexp.Compile("[a-z]")
+	patternUpper, _ := regexp.Compile("[A-Z]")
+	patternSpecial, _ := regexp.Compile("[\\^!@#$%\\^&*()_+\\-=[\\]{}\\|;':\\\",.<>/?`~]")
+
+	switch {
+	case !(patternNum.MatchString(pass)):
+		return errors.New("password must contain numbers")
+	case !(patternLower.MatchString(pass)):
+		return errors.New("password must contain lowercase characters")
+	case !(patternUpper.MatchString(pass)):
+		return errors.New("password must contain uppercase characters")
+	case !(patternSpecial.MatchString(pass)):
+		return errors.New("password must contain special characters")
+	}
+
+	return nil
 }
-func SanitizeAndCheckName(dirtyStr string) (bool, string) {
+
+func SanitizeAndCheckName(name string) (string, error) {
+	name = strings.Trim(name, " ")
+	if name == "" {
+		return "", errors.New("name too small")
+	}
+	// name = strings.ToValidUTF8(name,"")
+	// name =  strings.ReplaceAll(name,"  ","")
 	// dirtyStr = strings.Trim(dirtyStr, " ")
 	// cleanStr = []
-	return true, ""
+	return name, nil
 }

@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"finance-app/cmd/service"
+	"finance-app/constants"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -16,7 +17,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		//extracting id
 		userID, _ := service.ParseAndVerifyJWTToken(token)
 		if userID == -1 {
-			return echo.ErrUnauthorized
+			return constants.StatusUnauthorized401(c, "authentication failed")
 		} else {
 			c.Set("id", userID)
 		}

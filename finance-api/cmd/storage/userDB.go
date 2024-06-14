@@ -23,6 +23,21 @@ func GetUserWithEmail(userEmail string) (*models.User, error) {
 	}
 	return &user, nil
 }
+func GetUserWithID(userID int) (*models.User, error) {
+	var user models.User
+	//db error
+	if db == nil {
+		return nil, errors.New("could not connect to the db")
+	}
+	//running query
+	err := db.Where("id = ?", userID).First(&user).Error
+	//query error of some kinnd
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
 
 func GetUserOldPasswordWithID(userID int) (string, error) {
 	var user models.User
