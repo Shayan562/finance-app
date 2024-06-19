@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"finance-app/cmd/models"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -33,6 +35,14 @@ func ConnectToDB() {
 		panic(err.Error())
 	}
 
+	instance, err := db.DB()
+	if err != nil {
+		log.Fatal("Couldnt configure db")
+	}
+	instance.SetConnMaxIdleTime(time.Minute * 5)
+	instance.SetMaxIdleConns(1)
+	// instance.SetMaxOpenConns(50)
+
 	fmt.Println("Successfully Connected to Database")
 }
 
@@ -43,4 +53,8 @@ func GetDB() *gorm.DB {
 func CloseConnection() {
 	instance, _ := db.DB()
 	instance.Close()
+}
+
+func Migrate() {
+	db.AutoMigrate(&models.User{}, &models.Transaction{}, &models.Tag{})
 }

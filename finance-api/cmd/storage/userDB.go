@@ -18,12 +18,12 @@ func GetUserWithEmail(userEmail string) (*models.User, error) {
 		return nil, err
 	}
 	//user doesnot exist
-	if user.Id == 0 {
+	if user.ID == 0 {
 		return nil, nil
 	}
 	return &user, nil
 }
-func GetUserWithID(userID int) (*models.User, error) {
+func GetUserWithID(userID uint) (*models.User, error) {
 	var user models.User
 	//db error
 	if db == nil {
@@ -39,7 +39,7 @@ func GetUserWithID(userID int) (*models.User, error) {
 	return &user, nil
 }
 
-func GetUserOldPasswordWithID(userID int) (string, error) {
+func GetUserOldPasswordWithID(userID uint) (string, error) {
 	var user models.User
 	if db == nil {
 		return "", errors.New("could not connect to the db")
@@ -74,7 +74,7 @@ func InsertUser(userObj models.User) error {
 	err := db.Create(&userObj).Error
 	return err
 }
-func UpdatePasswordWithID(userID int, newPassword string) error {
+func UpdatePasswordWithID(userID uint, newPassword string) error {
 	//db error
 	if db == nil {
 		return errors.New("could not connect to the db")

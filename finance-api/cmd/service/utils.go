@@ -48,7 +48,7 @@ func CreateJWTToken(id int) (string, error) {
 	return tokenString, nil
 }
 
-func ParseAndVerifyJWTToken(tokenString string) (int, error) {
+func ParseAndVerifyJWTToken(tokenString string) (uint, error) {
 	secretKey := []byte(os.Getenv("SECRETKEY"))
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -59,24 +59,24 @@ func ParseAndVerifyJWTToken(tokenString string) (int, error) {
 		return secretKey, nil
 	})
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	// Check if the token is valid
 	if !token.Valid {
-		return -1, errors.New("invalid token")
+		return 0, errors.New("invalid token")
 	}
 	// Extract the user ID from the token claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return -1, errors.New("problem with claims")
+		return 0, errors.New("problem with claims")
 	}
 
 	userID, ok := claims["user"].(float64)
 	if !ok {
-		return -1, errors.New("problem with userid")
+		return 0, errors.New("problem with userid")
 	}
 
-	return int(userID), nil
+	return uint(userID), nil
 }
 
 func GeneratePassword() string {

@@ -92,7 +92,7 @@ func Login(c echo.Context) error {
 
 	//if matched gennerate jwt token
 	if correctPassword {
-		jwtToken, err := service.CreateJWTToken(userDB.Id)
+		jwtToken, err := service.CreateJWTToken(int(userDB.ID))
 		if err != nil {
 			return constants.StatusInternalServerError500(c, err.Error())
 		}
@@ -112,13 +112,13 @@ func UpdatePassword(c echo.Context) error {
 		c.Logger().Error(err)
 		return constants.StatusBadRequest400(c, "invalid request body")
 	}
-	userInput.Id = c.Get("id").(int)
+	userInput.ID = c.Get("id").(uint)
 	//early return if password not provided
 	if userInput.Password == "" {
 		return constants.StatusBadRequest400(c, "invalid request body")
 	}
 	//get user data for password creation
-	user, err := storage.GetUserWithID(userInput.Id)
+	user, err := storage.GetUserWithID(userInput.ID)
 	//some error related to db
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
@@ -140,7 +140,7 @@ func UpdatePassword(c echo.Context) error {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 
-	err = storage.UpdatePasswordWithID(userInput.Id, userInput.Password)
+	err = storage.UpdatePasswordWithID(userInput.ID, userInput.Password)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}

@@ -5,10 +5,13 @@ go 1.22.4
 require github.com/labstack/echo/v4 v4.4.0
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
+	gorm.io/driver/mysql v1.5.6 // indirect
 )
 
 require (
@@ -31,6 +34,7 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
+	gorm.io/datatypes v1.2.1
 	gorm.io/driver/postgres v1.5.8
 	gorm.io/gorm v1.25.10
 )

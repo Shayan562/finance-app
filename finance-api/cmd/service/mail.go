@@ -19,7 +19,7 @@ func SendMail(receiverAddress string, newPass string) error {
 
     <p style="text-align: center;">Not to worry, we got you! We got you a new password.</p>
     <p style="text-align: center; font-size: 1.2em ;"><b>%v</b></p>
-    <p style="text-align: center;">Use the password provided above to login. We <b>strongly</b> recommend you to change it after loging in.</p>
+    <p style="text-align: center;">Use the password provided above to login. We <b>strongly</b> recommend you to change it after logging in.</p>
 	`
 	messageTemplate = fmt.Sprintf(messageTemplate, newPass)
 

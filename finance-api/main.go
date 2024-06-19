@@ -30,9 +30,9 @@ func main() {
 	// }, middlewares.AuthMiddleware)
 
 	storage.ConnectToDB()
+	storage.Migrate()
 	// defer storage.CloseConnection()
 
 	e.Logger.Fatal((e.Start(":8081")))
-	// defer fmt.Println("EEnding")
 
 }
