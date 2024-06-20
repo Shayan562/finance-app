@@ -19,6 +19,10 @@ func main() {
 	e.POST("/forgot-password", handlers.ForgotPassword)
 	e.PATCH("/update-password", handlers.UpdatePassword, middlewares.AuthMiddleware)
 
+	e.GET("/tags", handlers.GetAllTags, middlewares.AuthMiddleware)
+	e.GET("/tags/:type", handlers.GetTags, middlewares.AuthMiddleware)
+	e.POST("/tags", handlers.NewTag, middlewares.AuthMiddleware)
+
 	// e.GET("/test", func(c echo.Context) error {
 	// 	userInput := models.User{}
 	// 	err := c.Bind(&userInput)

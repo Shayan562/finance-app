@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"finance-app/cmd/models"
 	"fmt"
 	"log"
 	"math/rand"
@@ -192,4 +193,19 @@ func SanitizeAndCheckName(name string) (string, error) {
 		return "", errors.New("name too small")
 	}
 	return name, nil
+}
+
+func SanitizeAndCheckTransType(transType string) (models.TransTypes, error) {
+	if transType == "" || len(transType) < 3 {
+		return "", errors.New("missing type(income or expense)")
+	}
+	transType = strings.ToLower(transType)
+	transType = strings.Trim(transType, " ")
+	if transType == "inc" || transType == "income" {
+		return models.Income, nil
+	}
+	if transType == "exp" || transType == "expense" {
+		return models.Expense, nil
+	}
+	return "", errors.New("invalid transaction or tag type(income or expense)")
 }
