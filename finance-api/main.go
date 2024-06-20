@@ -21,7 +21,10 @@ func main() {
 
 	e.GET("/tags", handlers.GetAllTags, middlewares.AuthMiddleware)
 	e.GET("/tags/:type", handlers.GetTags, middlewares.AuthMiddleware)
-	e.POST("/tags", handlers.NewTag, middlewares.AuthMiddleware)
+	e.POST("/tag", handlers.NewTag, middlewares.AuthMiddleware)
+
+	e.GET("/transactions", handlers.GetAllTransactions, middlewares.AuthMiddleware)
+	e.POST("/transaction", handlers.NewTransaction, middlewares.AuthMiddleware)
 
 	// e.GET("/test", func(c echo.Context) error {
 	// 	userInput := models.User{}

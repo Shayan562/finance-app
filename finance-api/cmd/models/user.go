@@ -21,13 +21,13 @@ func (t *TransTypes) String() string {
 	return ""
 }
 
-type TimeFrame string
+type TransRepeatFreq string
 
 const (
-	None    TimeFrame = "None"
-	Weekly  TimeFrame = "Weekly"
-	Monthly TimeFrame = "Monthly"
-	Yearly  TimeFrame = "Yearly"
+	None    TransRepeatFreq = "None"
+	Weekly  TransRepeatFreq = "Weekly"
+	Monthly TransRepeatFreq = "Monthly"
+	Yearly  TransRepeatFreq = "Yearly"
 )
 
 type User struct {
@@ -39,14 +39,14 @@ type User struct {
 }
 
 type Transaction struct {
-	ID        uint           `gorm:"primaryKey;autoIncrement;" json:"transactionID"`
-	UserID    uint           `gorm:"notNull;uniqueIndex" json:"UserID"`
-	TransType TransTypes     `gorm:"notNull;type:transaction_type;" json:"transactionType"`
-	TimeFrame TimeFrame      `gorm:"notNull;type:time_frame;default:'None'" json:"timeFrame"`
-	Amount    uint           `gorm:"notNull;" json:"amount"`
-	TransDate datatypes.Date `gorm:"notNull;" json:"transactionDate"`
-	Note      *string        `json:"note"`
-	Tags      []Tag          `gorm:"many2many:transaction_tags;" json:"transactionTags"`
+	ID              uint            `gorm:"primaryKey;autoIncrement;" json:"transactionID"`
+	UserID          uint            `gorm:"notNull;index:idx_transactions_userid" json:"userID"`
+	TransType       TransTypes      `gorm:"notNull;type:transaction_type;" json:"transactionType"`
+	TransRepeatFreq TransRepeatFreq `gorm:"notNull;type:time_frame;default:'None'" json:"transactionRepeatFreq"`
+	Amount          uint            `gorm:"notNull;" json:"amount"`
+	TransDate       datatypes.Date  `gorm:"notNull;" json:"transactionDate"`
+	Note            *string         `json:"note"`
+	Tags            []Tag           `gorm:"many2many:transaction_tags;" json:"transactionTags"`
 }
 
 type Tag struct {

@@ -87,7 +87,7 @@ func GeneratePassword() string {
 	patternUpper, _ := regexp.Compile("[A-Z]")
 	patternSpecial, _ := regexp.Compile("[\\^!@#$%\\^&*()_+\\-=[\\]{}\\|;':\\\",.<>/?`~]")
 
-	passLen := rand.Intn(10) + 16
+	passLen := 16
 	pass := make([]byte, passLen)
 	for attempt := 0; attempt < 1; {
 		for i := 0; i < passLen; i++ {
@@ -128,7 +128,7 @@ func SanitizeAndCheckEmail(email string) (string, error) {
 
 func CheckPass(pass string, name string, email string) error {
 	if len(pass) < 8 {
-		return errors.New("password must be atleast 8 characters long")
+		return errors.New("p assword must be atleast 8 characters long")
 	}
 	//checking for the users name in password
 	names := strings.Split(name, " ")
@@ -196,11 +196,11 @@ func SanitizeAndCheckName(name string) (string, error) {
 }
 
 func SanitizeAndCheckTransType(transType string) (models.TransTypes, error) {
-	if transType == "" || len(transType) < 3 {
+	if transType == "" {
 		return "", errors.New("missing type(income or expense)")
 	}
 	transType = strings.ToLower(transType)
-	transType = strings.Trim(transType, " ")
+	transType = strings.TrimSpace(transType)
 	if transType == "inc" || transType == "income" {
 		return models.Income, nil
 	}
@@ -208,4 +208,25 @@ func SanitizeAndCheckTransType(transType string) (models.TransTypes, error) {
 		return models.Expense, nil
 	}
 	return "", errors.New("invalid transaction or tag type(income or expense)")
+}
+
+func SanitizeAndCheckTransRepeatFreq(transFreq string) (models.TransRepeatFreq, error) {
+	if transFreq == "" {
+		return models.None, nil
+	}
+	transFreq = strings.ToLower(transFreq)
+	transFreq = strings.TrimSpace(transFreq)
+	switch transFreq {
+	case "none", "no", "n":
+		return models.None, nil
+	case "weekly", "week", "w":
+		return models.Weekly, nil
+	case "monthly", "month", "m":
+		return models.Monthly, nil
+	case "yearly", "year", "y":
+		return models.Yearly, nil
+	default:
+		return "", errors.New("invalid recurring frequency(none, weekly, monthly, or yearly)")
+	}
+
 }
