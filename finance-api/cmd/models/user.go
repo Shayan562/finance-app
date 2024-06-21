@@ -35,7 +35,7 @@ type User struct {
 	Name         string        `gorm:"notNull" json:"name"`
 	Email        string        `gorm:"notNull;uniqueIndex" json:"email"`
 	Password     string        `gorm:"notNull" json:"password"`
-	Transactions []Transaction `json:"transactions"`
+	Transactions []Transaction `gorm:"constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;" json:"transactions"`
 }
 
 type Transaction struct {
@@ -46,7 +46,7 @@ type Transaction struct {
 	Amount          uint            `gorm:"notNull;" json:"amount"`
 	TransDate       datatypes.Date  `gorm:"notNull;" json:"transactionDate"`
 	Note            *string         `json:"note"`
-	Tags            []Tag           `gorm:"many2many:transaction_tags;" json:"transactionTags"`
+	Tags            []Tag           `gorm:"many2many:transaction_tags;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"transactionTags"`
 }
 
 type Tag struct {

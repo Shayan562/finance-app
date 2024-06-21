@@ -17,7 +17,7 @@ func GetAllTags(c echo.Context) error {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	// fmt.Println((*tags)[0])
-	return c.JSON(http.StatusOK, *tags)
+	return c.JSON(http.StatusOK, tags)
 
 }
 

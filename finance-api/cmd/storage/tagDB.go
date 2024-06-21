@@ -5,7 +5,7 @@ import (
 	"finance-app/cmd/models"
 )
 
-func GetTags() (*[]models.Tag, error) {
+func GetTags() ([]models.Tag, error) {
 	tags := []models.Tag{}
 	if db == nil {
 		return nil, errors.New("could not connect to the db")
@@ -14,7 +14,18 @@ func GetTags() (*[]models.Tag, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &tags, nil
+	return tags, nil
+}
+func GetTagsWithIDs(tagIDs []uint) ([]models.Tag, error) {
+	tags := []models.Tag{}
+	if db == nil {
+		return nil, errors.New("could not connect to the db")
+	}
+	err := db.Find(&tags, tagIDs).Error
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
 }
 
 func GetTagsWithType(tagType string) (*[]models.Tag, error) {

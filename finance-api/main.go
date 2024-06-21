@@ -25,6 +25,8 @@ func main() {
 
 	e.GET("/transactions", handlers.GetAllTransactions, middlewares.AuthMiddleware)
 	e.POST("/transaction", handlers.NewTransaction, middlewares.AuthMiddleware)
+	e.PUT("/transaction", handlers.UpdateTransaction, middlewares.AuthMiddleware)
+	e.DELETE("/transactions/:transID", handlers.DeleteTransaction, middlewares.AuthMiddleware)
 
 	// e.GET("/test", func(c echo.Context) error {
 	// 	userInput := models.User{}

@@ -15,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/datatypes"
 )
 
 func HashPassword(password string) (string, error) {
@@ -36,7 +37,7 @@ func CreateJWTToken(id int) (string, error) {
 	secretKey := []byte(os.Getenv("SECRETKEY"))
 
 	claims := jwt.MapClaims{}
-	claims["exp"] = time.Now().Add(2 * time.Hour).Unix() //for testing reasons
+	claims["exp"] = time.Now().Add(10 * time.Hour).Unix() //for testing reasons
 	claims["authorized"] = true
 	claims["user"] = id
 
@@ -201,13 +202,14 @@ func SanitizeAndCheckTransType(transType string) (models.TransTypes, error) {
 	}
 	transType = strings.ToLower(transType)
 	transType = strings.TrimSpace(transType)
-	if transType == "inc" || transType == "income" {
+	switch transType {
+	case "income", "inc", "i", "+":
 		return models.Income, nil
-	}
-	if transType == "exp" || transType == "expense" {
+	case "expense", "exp", "e", "-":
 		return models.Expense, nil
+	default:
+		return "", errors.New("invalid transaction or tag type(must be income or expense)")
 	}
-	return "", errors.New("invalid transaction or tag type(income or expense)")
 }
 
 func SanitizeAndCheckTransRepeatFreq(transFreq string) (models.TransRepeatFreq, error) {
@@ -226,7 +228,28 @@ func SanitizeAndCheckTransRepeatFreq(transFreq string) (models.TransRepeatFreq, 
 	case "yearly", "year", "y":
 		return models.Yearly, nil
 	default:
-		return "", errors.New("invalid recurring frequency(none, weekly, monthly, or yearly)")
+		return "", errors.New("invalid recurring frequency(must be none, weekly, monthly, or yearly)")
 	}
 
+}
+
+func CheckTransAndTagsType(transObj models.Transaction) error {
+	if transObj.Tags == nil { //no tags so correct
+		return nil
+	}
+	for _, tag := range transObj.Tags {
+		if tag.TagType.String() != transObj.TransType.String() {
+			return errors.New("transaction type and tag type mismatch")
+		}
+	}
+	return nil
+}
+
+func SanitizeAndCheckDate(dateObj datatypes.Date) (datatypes.Date, error) {
+	var temp []byte
+	dateObj.GobDecode(temp)
+	fmt.Println(temp)
+
+	println(dateObj.Value())
+	return dateObj, nil
 }
