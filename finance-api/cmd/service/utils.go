@@ -37,7 +37,7 @@ func CreateJWTToken(id int) (string, error) {
 	secretKey := []byte(os.Getenv("SECRETKEY"))
 
 	claims := jwt.MapClaims{}
-	claims["exp"] = time.Now().Add(10 * time.Hour).Unix() //for testing reasons
+	claims["exp"] = time.Now().Add(2 * time.Hour).Unix()
 	claims["authorized"] = true
 	claims["user"] = id
 

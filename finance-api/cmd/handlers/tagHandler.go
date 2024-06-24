@@ -11,29 +11,29 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetAllTags(c echo.Context) error {
-	tags, err := storage.GetTags()
-	if err != nil {
-		return constants.StatusInternalServerError500(c, err.Error())
-	}
-	// fmt.Println((*tags)[0])
-	return c.JSON(http.StatusOK, tags)
-
-}
-
+// get all tags(no filter). 1 filter 'type' (income and expense)
 func GetTags(c echo.Context) error {
-	category := c.Param("type")
-	tagType, err := service.SanitizeAndCheckTransType(category)
+	tagType := c.QueryParam("type")
+
+	if tagType == "" { //get all the available tags
+		tags, err := storage.GetTags()
+		if err != nil {
+			return constants.StatusInternalServerError500(c, err.Error())
+		}
+		return c.JSON(http.StatusOK, tags)
+	}
+
+	//get tags of a certain type only
+	tagTypeCleaned, err := service.SanitizeAndCheckTransType(tagType)
 	if err != nil {
 		return constants.StatusBadRequest400(c, err.Error())
 	}
-
-	tags, err := storage.GetTagsWithType(tagType.String())
+	tags, err := storage.GetTagsWithType(tagTypeCleaned.String())
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
 	return c.JSON(http.StatusOK, *tags)
-
+	// return GetTags(tagType, c) //get tags of a certain type
 }
 
 func NewTag(c echo.Context) error {

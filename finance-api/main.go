@@ -19,14 +19,14 @@ func main() {
 	e.POST("/forgot-password", handlers.ForgotPassword)
 	e.PATCH("/update-password", handlers.UpdatePassword, middlewares.AuthMiddleware)
 
-	e.GET("/tags", handlers.GetAllTags, middlewares.AuthMiddleware)
-	e.GET("/tags/:type", handlers.GetTags, middlewares.AuthMiddleware)
+	e.GET("/tags", handlers.GetTags, middlewares.AuthMiddleware)
+	// e.GET("/tags/:type", handlers.GetTags, middlewares.AuthMiddleware)
 	e.POST("/tag", handlers.NewTag, middlewares.AuthMiddleware)
 
 	e.GET("/transactions", handlers.GetAllTransactions, middlewares.AuthMiddleware)
 	e.POST("/transaction", handlers.NewTransaction, middlewares.AuthMiddleware)
-	e.PUT("/transaction", handlers.UpdateTransaction, middlewares.AuthMiddleware)
-	e.DELETE("/transactions/:transID", handlers.DeleteTransaction, middlewares.AuthMiddleware)
+	e.PUT("/transaction", handlers.UpdateTransaction, middlewares.AuthMiddleware) //to be reviewed once ui is implemented
+	e.DELETE("/transaction/:trans-id", handlers.DeleteTransaction, middlewares.AuthMiddleware)
 
 	// e.GET("/test", func(c echo.Context) error {
 	// 	userInput := models.User{}

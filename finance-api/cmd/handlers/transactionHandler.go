@@ -5,21 +5,50 @@ import (
 	"finance-app/cmd/service"
 	"finance-app/cmd/storage"
 	"finance-app/constants"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"gorm.io/datatypes"
 )
 
+// no filter and filter on exact date
 func GetAllTransactions(c echo.Context) error {
 	userID := c.Get("id").(uint)
-	transactions, err := storage.GetAllTransactionsWithUserID(userID)
+	//extract  query parameterus
+	params := c.QueryParams()
+	//for db query at the end
+	conditionString := []string{"user_id=?"}
+	arguments := []any{userID}
+	//if it has date format it and check for use
+	if params.Has("date") {
+		dateStr := params["date"][0]
+		dateConv, err := time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			return constants.StatusBadRequest400(c, "incorrect date format(must be yyyy-mm-dd)")
+		}
+		date := datatypes.Date{}
+		err = date.Scan(dateConv)
+		if err != nil {
+			return constants.StatusBadRequest400(c, "incorrect date")
+		}
+		//adding to db query string
+		conditionString = append(conditionString, "and trans_date=?")
+		arguments = append(arguments, date)
+	}
+	//run the db query on givenn transactionns
+	transactions, err := storage.GetTransactionsWithFilters(strings.Join(conditionString, " "), arguments)
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
-	// fmt.Println((*tags)[0])
-	return c.JSON(http.StatusOK, *transactions)
+	if transactions == nil {
+		return constants.StatusNotFound404(c, "no transactions found")
+	}
 
+	return c.JSON(http.StatusOK, map[string][]models.Transaction{"transactions": transactions})
 }
 
 func NewTransaction(c echo.Context) error {
@@ -48,7 +77,7 @@ func NewTransaction(c echo.Context) error {
 	}
 	//make sure number of tags does not change
 	if countOfTagsBefore != len(transactionInput.Tags) {
-		return constants.StatusCreated201(c, "request contains tag/s the dont exist")
+		return constants.StatusCreated201(c, "request contains tag/s that dont exist")
 	}
 	//verify tags are of the same type as transactions
 	err = service.CheckTransAndTagsType(transactionInput)
@@ -108,7 +137,7 @@ func UpdateTransaction(c echo.Context) error {
 		return constants.StatusBadRequest400(c, err.Error())
 	}
 	if countOfTagsBefore != len(transactionInput.Tags) {
-		return constants.StatusCreated201(c, "request contains tag/s the dont exist")
+		return constants.StatusCreated201(c, "request contains tag/s that dont exist")
 	}
 	//verify tags are of the same type as transactions
 	err = service.CheckTransAndTagsType(transactionInput)
@@ -130,8 +159,10 @@ func UpdateTransaction(c echo.Context) error {
 
 }
 func DeleteTransaction(c echo.Context) error {
-	trans := c.Param("transID")
+	trans := c.Param("trans-id")
+	fmt.Println(c.ParamNames())
 	transID, err := strconv.ParseUint(trans, 10, 64)
+	fmt.Println(transID)
 	if err != nil {
 		return constants.StatusBadRequest400(c, "invalid transaction id")
 	}

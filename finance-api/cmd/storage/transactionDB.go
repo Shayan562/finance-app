@@ -3,6 +3,8 @@ package storage
 import (
 	"errors"
 	"finance-app/cmd/models"
+
+	"gorm.io/datatypes"
 )
 
 func NewTransaction(transactionObj *models.Transaction) error {
@@ -19,7 +21,7 @@ func DeleteTransaction(transID uint) error {
 	err := db.Delete(&models.Transaction{}, transID).Error
 	return err
 }
-func GetAllTransactionsWithUserID(userID uint) (*[]models.Transaction, error) {
+func GetAllTransactionsWithUserID(userID uint) ([]models.Transaction, error) {
 	if db == nil {
 		return nil, errors.New("could not connect to the db")
 	}
@@ -29,7 +31,7 @@ func GetAllTransactionsWithUserID(userID uint) (*[]models.Transaction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &transactions, nil
+	return transactions, nil
 }
 func GetTransactionWithTransID(transID uint) (*models.Transaction, error) {
 	if db == nil {
@@ -48,4 +50,26 @@ func UpdateTransaction(transObj models.Transaction) error {
 	}
 	db.Save(transObj)
 	return nil
+}
+func GetTransactionWithDate(userID uint, dateObj datatypes.Date) ([]models.Transaction, error) {
+	if db == nil {
+		return nil, errors.New("could not connect to the db")
+	}
+	transactions := []models.Transaction{}
+	err := db.Preload("Tags").Where("trans_date=? and user_id=?", dateObj, userID).Find(&transactions).Error
+	if err != nil {
+		return nil, err
+	}
+	return transactions, err
+}
+func GetTransactionsWithFilters(conditionString string, arguments []any) ([]models.Transaction, error) {
+	if db == nil {
+		return nil, errors.New("could not connect to the db")
+	}
+	transactions := []models.Transaction{}
+	err := db.Preload("Tags").Where(conditionString, arguments...).Find(&transactions).Error
+	if err != nil {
+		return nil, err
+	}
+	return transactions, err
 }
