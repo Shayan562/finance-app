@@ -16,7 +16,7 @@ func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		//extracting id
 		userID, _ := service.ParseAndVerifyJWTToken(token)
 		if userID == 0 {
-			return constants.StatusUnauthorized401(c, "authentication failed")
+			return constants.StatusUnauthorized401(c, "authentication failed: invalid user id")
 		} else {
 			c.Set("id", userID)
 		}

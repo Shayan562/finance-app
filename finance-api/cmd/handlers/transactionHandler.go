@@ -71,6 +71,9 @@ func NewTransaction(c echo.Context) error {
 		tagIDs = append(tagIDs, tag.ID)
 		countOfTagsBefore += 1
 	}
+	if countOfTagsBefore == 0 {
+		return constants.StatusBadRequest400(c, "transaction must contain tags")
+	}
 	transactionInput.Tags, err = storage.GetTagsWithIDs(tagIDs)
 	if err != nil {
 		return constants.StatusBadRequest400(c, err.Error())

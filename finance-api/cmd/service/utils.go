@@ -103,15 +103,6 @@ func GeneratePassword() string {
 }
 
 /*
-	Sanitization
-	Email
-	1. Reg exp => __@__
-	2. No spaces anywhere
-	3. Only 1 @
-	4. No . at the start or end
-	Passwords
-	1. Length check
-	2. Check for email, name, and common passswords
 	Name
 	1. Strip Spaces from front and back
 	2. Remove Special Characters
@@ -129,7 +120,7 @@ func SanitizeAndCheckEmail(email string) (string, error) {
 
 func CheckPass(pass string, name string, email string) error {
 	if len(pass) < 8 {
-		return errors.New("p assword must be atleast 8 characters long")
+		return errors.New("password must be atleast 8 characters long")
 	}
 	//checking for the users name in password
 	names := strings.Split(name, " ")

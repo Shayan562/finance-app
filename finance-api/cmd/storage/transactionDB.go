@@ -73,3 +73,14 @@ func GetTransactionsWithFilters(conditionString string, arguments []any) ([]mode
 	}
 	return transactions, err
 }
+func GetAllRepeatingTransactions() ([]models.Transaction, error) {
+	if db == nil {
+		return nil, errors.New("could not connect to the db")
+	}
+	transactions := []models.Transaction{}
+	err := db.Preload("Tags").Where("trans_repeat_freq <> 'None'").Find(&transactions).Error
+	if err != nil {
+		return nil, err
+	}
+	return transactions, nil
+}

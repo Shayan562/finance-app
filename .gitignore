@@ -26,3 +26,26 @@ go.work.sum
 
 #environment
 .env
+
+# dependencies
+/frontend/penney-wise/node_modules
+/node_modules
+/frontend/penney-wise/.pnp
+/frontend/penney-wise/.pnp.js
+
+# testing
+/frontend/penney-wise/coverage
+
+# production
+/frontend/penney-wise/build
+
+# misc
+/frontend/penney-wise/.DS_Store
+/frontend/penney-wise/.env.local
+/frontend/penney-wise/.env.development.local
+/frontend/penney-wise/.env.test.local
+/frontend/penney-wise/.env.production.local
+
+/frontend/penney-wise/npm-debug.log*
+/frontend/penney-wise/yarn-debug.log*
+/frontend/penney-wise/yarn-error.log*

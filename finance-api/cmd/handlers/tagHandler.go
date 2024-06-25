@@ -20,7 +20,7 @@ func GetTags(c echo.Context) error {
 		if err != nil {
 			return constants.StatusInternalServerError500(c, err.Error())
 		}
-		return c.JSON(http.StatusOK, tags)
+		return c.JSON(http.StatusOK, map[string]any{"tags": tags})
 	}
 
 	//get tags of a certain type only
@@ -32,8 +32,7 @@ func GetTags(c echo.Context) error {
 	if err != nil {
 		return constants.StatusInternalServerError500(c, err.Error())
 	}
-	return c.JSON(http.StatusOK, *tags)
-	// return GetTags(tagType, c) //get tags of a certain type
+	return c.JSON(http.StatusOK, map[string]any{"tags": *tags})
 }
 
 func NewTag(c echo.Context) error {
