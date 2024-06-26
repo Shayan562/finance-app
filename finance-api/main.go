@@ -13,9 +13,15 @@ import (
 func main() {
 	e := echo.New()
 
+	// e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowCredentials: true,
+	}))
 	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
 	// e.Use(middleware.Logger())
 	//routes for users related tasks
+	e.GET("/user", handlers.GetUserInfo, middlewares.AuthMiddleware)
 	e.POST("/signup", handlers.Signup)
 	e.POST("/login", handlers.Login)
 	e.POST("/forgot-password", handlers.ForgotPassword)

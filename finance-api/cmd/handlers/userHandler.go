@@ -74,7 +74,7 @@ func Login(c echo.Context) error {
 	}
 	//checking pass
 	if userInput.Password == "" {
-		return constants.StatusBadRequest400(c, "Invalid request body")
+		return constants.StatusBadRequest400(c, "invalid request body")
 	}
 
 	userDB, err := storage.GetUserWithEmail(userInput.Email)
@@ -96,8 +96,19 @@ func Login(c echo.Context) error {
 		if err != nil {
 			return constants.StatusInternalServerError500(c, err.Error())
 		}
-		userDB.Password = ""
-		return c.JSON(http.StatusAccepted, map[string]any{"token": fmt.Sprintf("bearer %v", jwtToken), "user": userDB})
+
+		cookie := new(http.Cookie)
+		cookie.Name = "authToken"
+		cookie.Value = fmt.Sprintf("bearer %v", jwtToken)
+		cookie.Expires = time.Now().Add(2 * time.Hour)
+		cookie.HttpOnly = true
+		cookie.SameSite = http.SameSiteLaxMode
+		cookie.Secure = false
+		c.SetCookie(cookie)
+
+		return c.NoContent(http.StatusOK)
+		// userDB.Password = ""
+		// return c.JSON(http.StatusAccepted, map[string]any{"token": fmt.Sprintf("bearer %v", jwtToken), "user": userDB})
 	}
 
 	return constants.StatusBadRequest400(c, "invalid email or password")
@@ -189,4 +200,15 @@ func ForgotPassword(c echo.Context) error {
 
 	return constants.StatusAccepted202(c, "new password has been sent on the registered email")
 
+}
+
+func GetUserInfo(c echo.Context) error {
+	// userObj := models.User{}
+	userID := c.Get("id").(uint)
+	userObj, err := storage.GetUserWithID(userID)
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
+	}
+	userObj.Password = ""
+	return c.JSON(http.StatusAccepted, userObj)
 }

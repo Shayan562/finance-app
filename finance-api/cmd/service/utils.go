@@ -181,8 +181,11 @@ func CheckPass(pass string, name string, email string) error {
 
 func SanitizeAndCheckName(name string) (string, error) {
 	name = strings.Trim(name, " ")
-	if name == "" {
+	if len(name) <= 1 {
 		return "", errors.New("name too small")
+	}
+	if len(name) >= 50 {
+		return "", errors.New("name too long")
 	}
 	return name, nil
 }
