@@ -30,20 +30,26 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Card from "@mui/material/Card";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Alert from "@mui/material/Alert";
+import { Tooltip } from "@mui/material";
 
 export const CreateTransaction = (props) => {
 	const [tags, setTags] = useState([]);
 	const [transType, setTransType] = useState("");
-	const [transRepeatFreq, setTransRepeatFreq] = useState("");
+	const [transRepeatFreq, setTransRepeatFreq] = useState("n");
 	const [transDate, setTransDate] = useState("");
 	const [selectedTags, setSelectedTags] = useState([]);
 	const [availableTags, setAvailableTags] = useState([]);
 	const [transAmount, setTransAmount] = useState(0);
 	const [note, setNote] = useState("");
+	const [amountErr, setAmountError] = useState(false);
+	const [errorMsg, setErrorMsg] = useState("");
+	const [success, setSuccess] = useState("");
+	const navigate=useNavigate()
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault();
-		const transactions = {
+		const transaction = {
 			transactionType: transType,
 			transactionRepeatFreq: transRepeatFreq,
 			amount: transAmount,
@@ -51,10 +57,36 @@ export const CreateTransaction = (props) => {
 			transactionTags: selectedTags,
 		};
 		if (note !== "") {
-			transactions["note"] = note;
+			transaction["note"] = note;
 		}
-		console.log(transactions);
-    //need to checks before post request
+
+		if (transaction.amount <= 0) {
+			setAmountError(true);
+			setErrorMsg("Invalid amount");
+			return;
+		} else {
+			setAmountError(false);
+		}
+		if (transaction.transactionTags.length < 1) {
+			setErrorMsg("No tags selcted");
+			return;
+		}
+		if (transaction.transactionDate === "") {
+			setErrorMsg("No date selcted");
+			return;
+		}
+		setErrorMsg("");
+
+		try {
+			const res = await Axios.post(
+				"http://localhost:8081/transaction",
+				transaction
+			);
+			console.log(res.data);
+			setSuccess("Transaction Created.");
+		} catch (err) {
+			setErrorMsg(err.response.data.Error);
+		}
 	};
 
 	const updateTransType = (event) => {
@@ -68,10 +100,15 @@ export const CreateTransaction = (props) => {
 	};
 	const updateAmount = (event) => {
 		const val = event.target.value;
-		if (!isNaN(val)) {
-			setTransAmount(Number(event.target.value));
-			console.log(Number(event.target.value));
+		if (isNaN(val)) {
+			setAmountError(true);
+			setErrorMsg("Amount must be a number");
+			return
 		}
+
+		setAmountError(false);
+		setTransAmount(Number(event.target.value));
+		setErrorMsg("");
 	};
 	const updateNote = (event) => {
 		setNote(event.target.value);
@@ -82,6 +119,19 @@ export const CreateTransaction = (props) => {
 	const updateTransDate = (event) => {
 		const mon = event.month();
 		const day = event.day();
+		if (
+			isNaN(day) ||
+			isNaN(mon) ||
+			isNaN(event.year()) ||
+			day > 31 ||
+			mon > 12 ||
+			event.year() < 2000
+		) {
+			setErrorMsg("Invalid date");
+			setTransDate("");
+		} else {
+			setErrorMsg("");
+		}
 
 		const dateTemp = `${event.year()}-${mon < 9 ? "0" + String(mon) : mon}-${
 			day < 9 ? "0" + String(day) : day
@@ -97,7 +147,11 @@ export const CreateTransaction = (props) => {
 				// setSelectedTags(res.data.tags);
 				console.log(tags);
 			} catch (err) {
-				console.log(err);
+				const msg=err.response.data.error
+				if(msg==='http: named cookie not present'){
+					navigate('/login')
+				}
+				console.log(msg);
 			}
 		};
 		getTags();
@@ -117,11 +171,10 @@ export const CreateTransaction = (props) => {
 				}),
 			];
 		});
+		setErrorMsg("");
 		console.log(id);
-		console.log(event.currentTarget);
 	};
 	const removeTagFromSelected = (event) => {
-		console.log(event);
 		const id = Number(event.currentTarget.id);
 		setSelectedTags((prev) => {
 			return prev?.filter((tag) => {
@@ -136,245 +189,257 @@ export const CreateTransaction = (props) => {
 				}),
 			];
 		});
-		console.log(event.currentTarget.id);
-		console.log(event.currentTarget);
+		setErrorMsg("");
+		console.log(id);
 	};
 
 	return (
 		<>
-			<div>
-				{tags?.map((element) => {
-					// if (element.tagType==='Income')
-					return (
-						<p>
-							Tag ID: {element.tagID}
-							Tag Name: {element.tagName}
-							Tag Type: {element.tagType}
-						</p>
-					);
-				})}
-			</div>
-			<Container component='main' maxWidth='xs'>
-				{/* <CssBaseline /> */}
-				<Box
-					sx={{
-						marginTop: 8,
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-					}}>
-					<Typography component='h1' variant='h5'>
-						Create Transaction
-					</Typography>
+			<Container component='main' maxWidth='xs' sx={{mt:4}}>
+				{success !== "" && (
+					<Alert sx={{ mb:1,mx:2 }} severity='success'>
+						{success}
+					</Alert>
+				)}
+				<CssBaseline />
+				<Card sx={{ px: 5, py: 4, borderRadius: 5, boxShadow: 10 }}>
 					<Box
-						component='form'
-						noValidate={false}
-						onSubmit={handleSubmit}
-						sx={{ mt: 3 }}>
-						<Grid container spacing={2}>
-							{/* <Grid item xs={12}> */}
-							<FormControl sx={{ m: 1, minWidth: 120 }}>
-								<InputLabel id='transaction-type'>Transaction Type</InputLabel>
-								<Select
-									labelId='transaction-type'
-									id='transaction-type'
-									value={transType}
-									label='transaction-type'
-									onChange={updateTransType}>
-									<MenuItem value={"Income"}>Income</MenuItem>
-									<MenuItem value={"Expense"}>Expense</MenuItem>
-								</Select>
-								<FormHelperText>Income or Expense</FormHelperText>
-							</FormControl>
-							{/* </Grid> */}
-
-							<FormControl sx={{ m: 1, minWidth: 120 }}>
-								<InputLabel id='transaction-repeat-frequecy'>
-									Transaction Repeat Frequency
-								</InputLabel>
-								<Select
-									labelId='transaction-repeat-frequecy'
-									id='transaction-repeat-frequecy'
-									value={transRepeatFreq}
-									label='transaction-repeat-frequecy'
-									onChange={updateTransRepeatFreq}>
-									<MenuItem value={"n"}>None</MenuItem>
-									<MenuItem value={"w"}>Weekly</MenuItem>
-									<MenuItem value={"m"}>Monthly</MenuItem>
-									<MenuItem value={"y"}>Yearly</MenuItem>
-								</Select>
-								<FormHelperText>
-									How often should the transaction auto reoccur
-								</FormHelperText>
-							</FormControl>
-
-							<FormControl fullWidth sx={{ m: 1, minWidth: 120 }}>
-								<InputLabel htmlFor='outlined-adornment-amount'>
-									Amount
-								</InputLabel>
-								<OutlinedInput
-									id='outlined-adornment-amount'
-									startAdornment={
-										<InputAdornment position='start'>$</InputAdornment>
-									}
-									label='Amount'
-									onChange={updateAmount}
-								/>
-							</FormControl>
-							<TextField
-								id='outlined-multiline-flexible'
-								sx={{ m: 1, minWidth: 120 }}
-								label='Note'
-								multiline
-								rows={4}
-								onChange={updateNote}
-							/>
-							<LocalizationProvider dateAdapter={AdapterDayjs}>
-								<DemoContainer
-									sx={{ m: 1, minWidth: 120 }}
-									components={["DatePicker"]}>
-									<DatePicker
-										label='Date'
-										format='DD-MM-YYYY'
-										onChange={updateTransDate}
+						sx={{
+							// marginTop: 8,
+							display: "flex",
+							flexDirection: "column",
+							// alignItems: "center",
+						}}>
+						<Typography component='h1' variant='h5' sx={{ mt: 0 }}>
+							Create Transaction
+						</Typography>
+						<Box
+							component='form'
+							noValidate={false}
+							onSubmit={handleSubmit}
+							sx={{ mt: 3, ml: 1 }}>
+							<Grid container spacing={2}>
+								{/* <Grid item xs={12}> */}
+								<FormControl
+									sx={{
+										m: 1,
+										mb: 1,
+										minWidth: 180,
+										boxShadow: 5,
+										borderRadius: 2,
+									}}>
+									<InputLabel id='transaction-type'>
+										Transaction Type
+									</InputLabel>
+									<Select
+										labelId='transaction-type'
+										id='transaction-type'
+										value={transType}
+										label='transaction-type'
+										required
+										onChange={updateTransType}>
+										<MenuItem value={"Income"}>Income</MenuItem>
+										<MenuItem value={"Expense"}>Expense</MenuItem>
+									</Select>
+									{/* <FormHelperText>Income or Expense</FormHelperText> */}
+								</FormControl>
+								{/* </Grid> */}
+								<FormControl
+									sx={{
+										mt: 0,
+										m: 1,
+										minWidth: 120,
+										boxShadow: 5,
+										borderRadius: 2,
+									}}>
+									<InputLabel htmlFor='outlined-adornment-amount'>
+										Amount
+									</InputLabel>
+									<OutlinedInput
+										id='outlined-adornment-amount'
+										startAdornment={
+											<InputAdornment position='start'>$</InputAdornment>
+										}
+										label='Amount'
+										required
+										error={amountErr}
+										onChange={updateAmount}
 									/>
-								</DemoContainer>
-							</LocalizationProvider>
-							<Card sx={{ ml: 1, mt: 1, minWidth: 350, minHeight: 50, p: 2 }}>
-								<Typography component='h1' variant='body2' sx={{ pb: 1 }}>
-									Selected Tags
-								</Typography>
-								<Grid container spacing={1} alignItems={"center"}>
-									{selectedTags?.map((tag) => {
-										// if (tag.type === transType) {
-										return (
-											<Grid item>
-												<Chip
-													label={tag.tagName + " ❌"}
-													variant='outlined'
-													id={tag.tagID}
-													onClick={removeTagFromSelected}
+								</FormControl>
+								<LocalizationProvider dateAdapter={AdapterDayjs}>
+									<DemoContainer
+										sx={{
+											ml: 1,
+											mb: 1,
+											mt: 1,
+											// minWidth: 120,
+											// pt: 1,
+											boxShadow: 5,
+											borderRadius: 2,
+											
+											
+										}}
+										
+										components={["DatePicker"]}>
+										<DatePicker
+											sx={{ ml: 1,
+												mb: 1,
+												mt: 1,
+												minWidth: 120,
+												// pt: 0,
+												boxShadow: 5,
+												borderRadius: 2,}}
+											label='Date'
+											format='DD-MM-YYYY'
+											onChange={updateTransDate}
+											onError={(event) => {
+												setTransDate("");
+											}}
+										/>
+									</DemoContainer>
+								</LocalizationProvider>
 
-													// deleteIcon={<DeleteIcon />}
-												/>
-											</Grid>
-										);
-										// }
-									})}
-								</Grid>
-							</Card>
-							<Card sx={{ ml: 1, mt: 2, minWidth: 350, minHeight: 50, p: 2 }}>
-								<Typography component='h1' variant='body2' sx={{ pb: 1 }}>
-									Available Tags
-								</Typography>
-								<Grid container spacing={1} alignItems={"center"}>
-									{availableTags?.map((tag) => {
-										// if (tag.type === transType) {
-										return (
-											<Grid item>
-												<Chip
-													label={tag.tagName + " ✅"}
-													variant='outlined'
-													id={tag.tagID}
-													onClick={addTagToSelected}
-												/>
-											</Grid>
-										);
-										// }
-									})}
-								</Grid>
-							</Card>
-							{/* <br /> */}
-							{/* <Stack
-								direction='row'
-								maxWidth={120}
-								spacing={1}
-								wrap={"wrap"}
-								alignItems={"flex-start"}>
-								<Chip
-									label='Clickable'
-									onClick={() => {
-										console.log("cllicked");
+								<FormControl
+									sx={{
+										mb: 1,
+										m: 1,
+										mt: 1,
+										minWidth: 270,
+										boxShadow: 5,
+										borderRadius: 2,
+									}}>
+									<InputLabel id='transaction-repeat-frequecy'>
+										Transaction Repeat Frequency
+									</InputLabel>
+									<Select
+										labelId='transaction-repeat-frequecy'
+										id='transaction-repeat-frequecy'
+										fullWidth
+										notched={true}
+										value={transRepeatFreq}
+										label='transaction-repeat-frequecy'
+										required
+										onChange={updateTransRepeatFreq}>
+										<MenuItem value={"n"}>None</MenuItem>
+										<MenuItem value={"w"}>Weekly</MenuItem>
+										<MenuItem value={"m"}>Monthly</MenuItem>
+										<MenuItem value={"y"}>Yearly</MenuItem>
+									</Select>
+									{/* <FormHelperText>
+									How often should the transaction auto reoccur
+								</FormHelperText> */}
+								</FormControl>
+
+								<Card
+									sx={{
+										mt: 1,
+										ml: 1,
+										minWidth: 320,
+										minHeight: 50,
+										p: 2,
+										boxShadow: 5,
+										borderRadius: 2,
+									}}>
+									<Typography component='h1' variant='body2' sx={{ pb: 1 }}>
+										Selected Tags
+									</Typography>
+									<Grid container spacing={1} alignItems={"center"}>
+										{selectedTags?.map((tag) => {
+											// if (tag.type === transType) {
+											return (
+												<Grid item>
+													<Tooltip
+														title='Click To Remove'
+														arrow
+														placement='top'>
+														<Chip
+															label={tag.tagName}
+															variant='outlined'
+															id={tag.tagID}
+															onClick={removeTagFromSelected}
+
+															// deleteIcon={<DeleteIcon />}
+														/>
+													</Tooltip>
+												</Grid>
+											);
+											// }
+										})}
+									</Grid>
+								</Card>
+								<Card
+									sx={{
+										mt: 2,
+										ml: 1,
+										minWidth: 320,
+										minHeight: 50,
+										p: 2,
+										boxShadow: 5,
+										borderRadius: 2,
+									}}>
+									<Typography component='h1' variant='body2' sx={{ pb: 1 }}>
+										Available Tags
+									</Typography>
+									<Grid container spacing={1} alignItems={"center"}>
+										{availableTags?.map((tag) => {
+											// if (tag.type === transType) {
+											return (
+												<Grid item>
+													<Tooltip
+														title='Click To Select'
+														arrow
+														placement='top'>
+														<Chip
+															label={tag.tagName}
+															variant='outlined'
+															id={tag.tagID}
+															onClick={addTagToSelected}
+														/>
+													</Tooltip>
+												</Grid>
+											);
+											// }
+										})}
+									</Grid>
+								</Card>
+								{/* <Grid item> */}
+								<TextField
+									id='outlined-multiline-flexible'
+									sx={{
+										m: 1,
+										minWidth: 320,
+										mt: 2,
+										boxShadow: 5,
+										borderRadius: 2,
 									}}
+									label='Note'
+									multiline
+									rows={4}
+									onChange={updateNote}
 								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-								<Chip
-									label='Clickable'
-									variant='outlined'
-									onClick={() => {
-										console.log("cllicked");
-									}}
-								/>
-							</Stack> */}
-						</Grid>
-						{/* <p style={{color:"red"}}>{errorMsg}</p> */}
-						<Button
-							type='submit'
-							fullWidth
-							variant='contained'
-							sx={{ mt: 3, mb: 2 }}>
-							Save
-						</Button>
-						<Grid container justifyContent='flex-end'>
-							<Grid item></Grid>
-						</Grid>
+
+								{errorMsg !== "" && (
+									<Alert sx={{ ml: 1, mt: 1 , minWidth:320}} severity='error'>
+										{errorMsg}
+									</Alert>
+								)}
+
+								<Button
+									type='submit'
+									variant='contained'
+									disabled={amountErr||errorMsg!==""}
+									sx={{ ml: 1, mr: 1, mt: 2, mb: 0, minWidth: 320 }}>
+									Create Transaction
+								</Button>
+								{/* </Grid> */}
+							</Grid>
+
+							<Grid container justifyContent='flex-end'>
+								<Grid item></Grid>
+							</Grid>
+						</Box>
 					</Box>
-				</Box>
+				</Card>
 			</Container>
 		</>
 	);

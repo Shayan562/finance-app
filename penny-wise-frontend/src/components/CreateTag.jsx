@@ -38,8 +38,10 @@ export const CreateTag = (props) => {
 	const [transType, setTransType] = useState("");
 	const [errorMsg, setErrorMsg] = useState("");
 	const [success, setSuccess] = useState(false);
+	const navigate=useNavigate()
 	const handleSubmit = async (event) => {
 		event.preventDefault();
+
 		var flag = false;
 		tags.forEach((tag) => {
 			if (tag.tagName === tagName && tag.tagType === transType) {
@@ -48,10 +50,10 @@ export const CreateTag = (props) => {
 				return;
 			}
 		});
-		setErrorMsg("");
 		if (flag) {
 			return;
 		}
+		setErrorMsg("");
 
 		try {
 			const res = await Axios.post("http://localhost:8081/tag", {
@@ -84,6 +86,10 @@ export const CreateTag = (props) => {
 				});
 				setTags(tagsTemp);
 			} catch (err) {
+				const msg=err.response.data.error
+				if(msg==='http: named cookie not present'){
+					navigate('/login')
+				}
 				console.log(err);
 			}
 		};
@@ -93,62 +99,88 @@ export const CreateTag = (props) => {
 	return (
 		<>
 			<Container component='main' maxWidth='xs'>
-				{success && <Alert severity='success'>Tag Created.</Alert>}
+				{success && (
+					<Alert sx={{ m: 2 }} severity='success'>
+						Tag Created
+					</Alert>
+				)}
 				<CssBaseline />
-				<Box
-					sx={{
-						marginTop: 8,
-						display: "flex",
-						flexDirection: "column",
-						alignItems: "center",
-					}}>
-					<Typography component='h1' variant='h5'>
-						Create Tag
-					</Typography>
+				<Card sx={{ px: 5, py: 4, borderRadius: 5, boxShadow: 10 }}>
 					<Box
-						component='form'
-						noValidate={false}
-						onSubmit={handleSubmit}
-						sx={{ mt: 3 }}>
-						<Grid container spacing={2}>
+						sx={{
+							// marginTop: 8,
+							display: "flex",
+							flexDirection: "column",
+							// alignItems: "center",
+						}}>
+						<Typography component='h1' variant='h5' sx={{ mt: 0 }}>
+							Create Tag
+						</Typography>
+						<Box
+							component='form'
+							noValidate={false}
+							onSubmit={handleSubmit}
+							sx={{ mt: 1, ml: 0 }}>
+							{/* <Grid container spacing={2}> */}
 							{/* <Grid item xs={12}> */}
-							<FormControl sx={{ m: 1, minWidth: 120 }}>
+							<FormControl
+								sx={{
+									m: 1,
+									ml: 0,
+									minWidth: 180,
+									boxShadow: 5,
+									borderRadius: 2,
+								}}>
 								<InputLabel id='transaction-type'>Transaction Type</InputLabel>
 								<Select
 									labelId='transaction-type'
 									id='transaction-type'
 									value={transType}
 									label='transaction-type'
+									required
 									onChange={updateTransType}>
 									<MenuItem value={"Income"}>Income</MenuItem>
 									<MenuItem value={"Expense"}>Expense</MenuItem>
 								</Select>
-								<FormHelperText>Income or Expense</FormHelperText>
+								{/* <FormHelperText>Income or Expense</FormHelperText> */}
 							</FormControl>
 							{/* </Grid> */}
 
 							<TextField
 								id='outlined-multiline-flexible'
-								sx={{ m: 1, minWidth: 120 }}
-								label='tag-name'
+								sx={{
+									m: 1,
+									ml: 0,
+									minWidth: 250,
+									mt: 1,
+									boxShadow: 5,
+									borderRadius: 2,
+								}}
+								label='Tag Name'
 								onChange={updateTagName}
 								error={errorMsg !== ""}
 							/>
-						</Grid>
-						{<p style={{ color: "red" }}>{errorMsg}</p>}
-						<Button
-							type='submit'
-							fullWidth
-							variant='contained'
-							sx={{ mt: 3, mb: 2 }}>
-							Create Tag
-						</Button>
-						<Grid container justifyContent='flex-end'>
+							{/* </Grid> */}
+							{errorMsg !== "" && (
+								<Alert sx={{ mr: 2, mt: 1 }} severity='error'>
+									{errorMsg}
+								</Alert>
+							)}
+							<Button
+								type='submit'
+								// fullWidth
+								variant='contained'
+								sx={{ ml: 0, mr: 1, mt: 2, mb: 0, minWidth: 320 }}>
+								Create Tag
+							</Button>
+							{/* <Grid container justifyContent='flex-end'>
 							<Grid item></Grid>
-						</Grid>
+						</Grid> */}
+						</Box>
 					</Box>
-				</Box>
+				</Card>
 			</Container>
 		</>
 	);
 };
+

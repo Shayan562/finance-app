@@ -48,7 +48,7 @@ func GetAllTransactions(c echo.Context) error {
 		return constants.StatusNotFound404(c, "no transactions found")
 	}
 
-	return c.JSON(http.StatusOK, map[string][]models.Transaction{"transactions": transactions})
+	return c.JSON(http.StatusOK, transactions)
 }
 
 func NewTransaction(c echo.Context) error {

@@ -15,6 +15,9 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Alert } from "@mui/material";
+
+//insta logout user if this page is visited
 
 export const Login = () => {
 	const navigate = useNavigate();
@@ -57,7 +60,7 @@ export const Login = () => {
 			// console.log(await response)
 			setErrorMsg("");
 
-			window.sessionStorage.setItem("isLoggedIn", true);
+		
 
 			// console.log(window.sessionStorage.getItem('token'))
 			// try{
@@ -90,7 +93,7 @@ export const Login = () => {
 				sm={4}
 				md={7}
 				sx={{
-					backgroundImage: `url(${process.env.PUBLIC_URL}/login-img.jpg)`,
+					backgroundImage: `url(${process.env.PUBLIC_URL}/login-img3.jpg)`,
 					backgroundRepeat: "no-repeat",
 					backgroundColor: (t) =>
 						t.palette.mode === "light"
@@ -101,16 +104,16 @@ export const Login = () => {
 					display: "flex",
 					flexDirection: "column",
 					alignItems: "center",
-					justifyContent: "start",
+					justifyContent: "center",
 				}}>
-				<Avatar sx={{ mt: 16, bgcolor: "primary.main" }}>
+				<Avatar sx={{ bgcolor: "primary.main" }}>
 					<LockOutlinedIcon />
 				</Avatar>
 				<Typography component='h1' variant='h4'>
 					Welcome to Penny Wise
 				</Typography>
 
-				<Typography component='h3' variant='subtitle1'>
+				<Typography component='h3' variant='subtitle1' >
 					Your personal assistant for managing expenses, tracking income, and
 					achieving financial goals.
 				</Typography>
@@ -118,11 +121,12 @@ export const Login = () => {
 			<Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
 				<Box
 					sx={{
-						my: 8,
+						my: 30,
 						mx: 4,
 						display: "flex",
 						flexDirection: "column",
 						alignItems: "center",
+						justifyContent:"center"
 					}}>
 					<Typography component='h1' variant='h5'>
 						Login
@@ -131,7 +135,9 @@ export const Login = () => {
 						component='form'
 						noValidate={false}
 						onSubmit={handleSubmit}
-						sx={{ mt: 1 }}>
+						sx={{ mt: 1 }}
+            
+            >
 						<TextField
 							margin='normal'
 							required
@@ -155,7 +161,9 @@ export const Login = () => {
 							autoComplete='current-password'
 							error={passwordError}
 						/>
-						<p style={{ color: "red" }}>{errorMsg}</p>
+						{errorMsg!=="" && <Alert  severity='error'>
+										{errorMsg}
+									</Alert>}
 						<Button
 							type='submit'
 							fullWidth

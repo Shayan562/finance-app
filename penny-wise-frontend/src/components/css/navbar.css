@@ -1,0 +1,14 @@
+.logo {
+    text-decoration: none;
+    color:white ;
+    &:hover{
+        color:oldlace;
+        text-decoration-line: underline;
+    }
+   
+}
+
+.navbar{
+    width: 100%;
+  
+}
