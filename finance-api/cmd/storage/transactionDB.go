@@ -38,7 +38,7 @@ func GetTransactionWithTransID(transID uint) (*models.Transaction, error) {
 		return nil, errors.New("could not connect to the db")
 	}
 	transactions := models.Transaction{}
-	err := db.Find(&transactions, transID).Error
+	err := db.Preload("Tags").Find(&transactions, transID).Error
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +79,17 @@ func GetAllRepeatingTransactions() ([]models.Transaction, error) {
 	}
 	transactions := []models.Transaction{}
 	err := db.Preload("Tags").Where("trans_repeat_freq <> 'None'").Find(&transactions).Error
+	if err != nil {
+		return nil, err
+	}
+	return transactions, nil
+}
+func GetTransactionsMinimumData(userID uint) ([]models.Transaction, error) {
+	if db == nil {
+		return nil, errors.New("could not connect to the db")
+	}
+	transactions := []models.Transaction{}
+	err := db.Select("id", "trans_type", "amount", "trans_date").Where("user_id=?", userID).Order("trans_date DESC").Find(&transactions).Error
 	if err != nil {
 		return nil, err
 	}

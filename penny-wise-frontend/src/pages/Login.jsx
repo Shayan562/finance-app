@@ -16,6 +16,7 @@ import Axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Alert } from "@mui/material";
+import { useEffect } from "react";
 
 //insta logout user if this page is visited
 
@@ -82,10 +83,23 @@ export const Login = () => {
 			setErrorMsg(msg);
 		}
 	};
+	useEffect(()=>{
+		const logoutUser=async()=>{
+			try {
+				await Axios.get("http://localhost:8081/logout");
+				
+			} catch (err) {
+				const msg = err.response.data.error;
+				console.log(msg);
+			}
+
+		}
+		logoutUser()
+	},[])
 
 	return (
 		// <ThemeProvider theme={defaultTheme}>
-		<Grid container component='main' sx={{ height: "100vh" }}>
+		<Grid container component='main' sx={{  }}>
 			<CssBaseline />
 			<Grid
 				item
@@ -113,7 +127,7 @@ export const Login = () => {
 					Welcome to Penny Wise
 				</Typography>
 
-				<Typography component='h3' variant='subtitle1' >
+				<Typography component='h3' variant='subtitle1' sx={{mb:5}} >
 					Your personal assistant for managing expenses, tracking income, and
 					achieving financial goals.
 				</Typography>

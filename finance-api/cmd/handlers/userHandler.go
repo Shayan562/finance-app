@@ -212,3 +212,13 @@ func GetUserInfo(c echo.Context) error {
 	userObj.Password = ""
 	return c.JSON(http.StatusAccepted, userObj)
 }
+
+func Logout(c echo.Context) error {
+	cookie, err := c.Cookie("authToken")
+	if err != nil {
+		return constants.StatusBadRequest400(c, err.Error())
+	}
+	cookie.Expires = time.Now().Add(-time.Hour)
+	c.SetCookie(cookie)
+	return c.NoContent(http.StatusOK)
+}

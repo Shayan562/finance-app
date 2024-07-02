@@ -50,6 +50,20 @@ func GetAllTransactions(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, transactions)
 }
+func GetAllTransactionsMin(c echo.Context) error {
+	userID := c.Get("id").(uint)
+
+	//run the db query on givenn transactionns
+	transactions, err := storage.GetTransactionsMinimumData(userID)
+	if err != nil {
+		return constants.StatusInternalServerError500(c, err.Error())
+	}
+	if transactions == nil {
+		return constants.StatusNotFound404(c, "no transactions found")
+	}
+
+	return c.JSON(http.StatusOK, transactions)
+}
 
 func NewTransaction(c echo.Context) error {
 	transactionInput := models.Transaction{}
@@ -185,4 +199,23 @@ func DeleteTransaction(c echo.Context) error {
 	}
 
 	return constants.StatusOK200(c, "transaction deleted successfully")
+}
+
+func GetSingleTransaction(c echo.Context) error {
+	userID := c.Get("id").(uint)
+	trans := c.Param("id")
+	transID, err := strconv.ParseUint(trans, 10, 64)
+	if err != nil {
+		return constants.StatusBadRequest400(c, "invalid transaction id")
+	}
+
+	transaction, err := storage.GetTransactionWithTransID(uint(transID))
+	if err != nil {
+		return constants.StatusInternalServerError500(c, err.Error())
+	}
+	if transaction.UserID != userID {
+		return constants.StatusUnknownForbidden403(c, "unauthorized to view")
+	}
+
+	return c.JSON(http.StatusOK, transaction)
 }

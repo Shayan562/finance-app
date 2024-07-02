@@ -1,4 +1,4 @@
-import { Card } from "@mui/material";
+import { Card, Modal } from "@mui/material";
 import Axios from "axios";
 import { useEffect, useState } from "react";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -34,21 +34,78 @@ import Alert from "@mui/material/Alert";
 import { Tooltip } from "@mui/material";
 import Edit from "@mui/icons-material/Edit";
 import Divider from "@mui/material/Divider";
+import { UpdateTransaction } from "./UpdateTransactionModal";
 
 export const TransactionCard = (props) => {
-	//props are transaction object
-	const transaction = props.transaction;
-	const editTransaction = async () => {
-		console.log("Editing" + transaction.transactionID);
+	const [modalOpen, setModalOpen] = useState(false);
+	const [transaction, setTransaction] = useState({});
+	const navigate = useNavigate();
+	const handleModalOpen = () => {
+		setModalOpen(true);
 	};
+	const handleModalClose = () => {
+		setModalOpen(false);
+	};
+
+	// const editTransaction = async () => {
+	// 	console.log("Editing" + transaction.transactionID);
+	// };
 	const deleteTransaction = async () => {
 		console.log("Deleting" + transaction.transactionID);
 	};
-	console.log(props.trans);
+	useEffect(() => {
+		const getTransaction = async () => {
+            if (props.transactionID === null || isNaN(props.transactionID)) {
+				setModalOpen(false);
+				return;
+			}
+			try {
+				const res = await Axios.get(
+					`http://localhost:8081/transaction/${props.transactionID}`
+				);
+				setTransaction(await res.data);
+				
+			} catch (err) {
+                
+				const msg = err.response.data.error;
+				if (msg === "http: named cookie not present") {
+					navigate("/login");
+					return;
+				}
+				console.error(err);
+			}
+		};
+		getTransaction();
+        
+	}, []);
+	// console.log(props.trans);
 	return (
 		<>
 			<Container maxWidth='xs' sx={{ minWidth: 300, m: 5 }}>
 				<CssBaseline />
+				<Modal
+					open={modalOpen}
+					onClose={handleModalClose}
+					aria-labelledby='Edit Transaction'>
+					<Box
+						style={{
+							position: "absolute",
+							top: "50%",
+							left: "50%",
+							transform: "translate(-50%, -50%)",
+							width: 500,
+							bgcolor: "white",
+							//   border: '2px solid #000',
+							//   boxShadow: 24,
+							p: 4,
+						}}>
+						<UpdateTransaction
+							closeModal={handleModalClose}
+							trans={transaction}
+						/>
+						{/* <Button onClick={handleModalClose}>Close</Button> */}
+					</Box>
+				</Modal>
 				<Card
 					sx={{
 						px: 3,
@@ -59,9 +116,9 @@ export const TransactionCard = (props) => {
 						// m: 2,
 					}}>
 					<Grid container spacing={2}>
-						<Grid item xs={4}>
+						<Grid item xs={3}>
 							<Typography variant='body1' gutterBottom>
-								{transaction.transactionType}
+								{transaction?.transactionType}
 							</Typography>
 							<Typography variant='subtitle2' gutterBottom>
 								Type
@@ -71,18 +128,20 @@ export const TransactionCard = (props) => {
 							<Typography
 								variant='body1'
 								color={
-									transaction.transactionType === "Income" ? "primary" : "error"
+									transaction?.transactionType === "Income"
+										? "primary"
+										: "error"
 								}
 								gutterBottom>
-								{transaction.amount}
+								{transaction?.amount}
 							</Typography>
 							<Typography variant='subtitle2' gutterBottom>
 								Amount
 							</Typography>
 						</Grid>
-						<Grid item xs={4}>
+						<Grid item xs={5}>
 							<Typography variant='body1' gutterBottom>
-								{transaction.transactionDate.slice(0, 10)}
+								{new Date(transaction?.transactionDate).toDateString()}
 							</Typography>
 							<Typography variant='subtitle2' gutterBottom>
 								Date
@@ -90,7 +149,7 @@ export const TransactionCard = (props) => {
 						</Grid>
 						<Grid item xs={3}>
 							<Typography variant='body1' gutterBottom>
-								{transaction.transactionRepeatFreq}
+								{transaction?.transactionRepeatFreq}
 							</Typography>
 							<Typography variant='subtitle2' gutterBottom>
 								Auto Repeat Frequency
@@ -123,10 +182,11 @@ export const TransactionCard = (props) => {
 									spacing={1}
 									alignItems={"center"}
 									xs={{ pt: 0 }}>
-									{transaction.transactionTags.map((tag) => {
+									{transaction.transactionTags?.map((tag) => {
 										return (
 											<Grid item>
 												<Chip
+                                                    key={tag.tagID}
 													label={tag.tagName}
 													variant='outlined'
 													id={tag.tagID}
@@ -139,7 +199,7 @@ export const TransactionCard = (props) => {
 						</Grid>
 						<Grid item xs={12}>
 							<Typography variant='body1' gutterBottom>
-								{transaction.note === "" || transaction.note == null
+								{transaction?.note === "" || transaction?.note == null
 									? "No Note"
 									: transaction.note}
 							</Typography>
@@ -154,7 +214,7 @@ export const TransactionCard = (props) => {
 							<Button
 								type='button'
 								variant='contained'
-								onClick={editTransaction}
+								onClick={handleModalOpen}
 								// sx={{ m: 1, mx: 0,mr:3 }}
 								fullWidth>
 								<Edit sx={{ fontSize: "large" }} />

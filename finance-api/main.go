@@ -22,6 +22,7 @@ func main() {
 	// e.Use(middleware.Logger())
 	//routes for users related tasks
 	e.GET("/user", handlers.GetUserInfo, middlewares.AuthMiddleware)
+	e.GET("/logout", handlers.Logout, middlewares.AuthMiddleware)
 	e.POST("/signup", handlers.Signup)
 	e.POST("/login", handlers.Login)
 	e.POST("/forgot-password", handlers.ForgotPassword)
@@ -31,6 +32,8 @@ func main() {
 	e.POST("/tag", handlers.NewTag, middlewares.AuthMiddleware)
 	//transaction related tasks
 	e.GET("/transactions", handlers.GetAllTransactions, middlewares.AuthMiddleware)
+	e.GET("/transactions/min", handlers.GetAllTransactionsMin, middlewares.AuthMiddleware)
+	e.GET("/transaction/:id", handlers.GetSingleTransaction, middlewares.AuthMiddleware)
 	e.POST("/transaction", handlers.NewTransaction, middlewares.AuthMiddleware)
 	e.PUT("/transaction", handlers.UpdateTransaction, middlewares.AuthMiddleware) //to be reviewed once ui is implemented
 	e.DELETE("/transaction/:trans-id", handlers.DeleteTransaction, middlewares.AuthMiddleware)

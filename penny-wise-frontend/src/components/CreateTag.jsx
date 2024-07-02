@@ -60,6 +60,7 @@ export const CreateTag = (props) => {
 				tagName,
 				tagType: transType,
 			});
+			props.inc()
 			setSuccess(true);
 		} catch (err) {
 			setErrorMsg(err.response.data.error);
@@ -76,6 +77,7 @@ export const CreateTag = (props) => {
 		setErrorMsg("");
 	};
 	useEffect(() => {
+		//pass tags here
 		const getTags = async () => {
 			try {
 				const res = await Axios.get("http://localhost:8081/tags");
@@ -98,7 +100,7 @@ export const CreateTag = (props) => {
 
 	return (
 		<>
-			<Container component='main' maxWidth='xs'>
+			<Container component='main' maxWidth='xs' sx={{mt:4}}>
 				{success && (
 					<Alert sx={{ m: 2 }} severity='success'>
 						Tag Created
@@ -131,7 +133,7 @@ export const CreateTag = (props) => {
 									boxShadow: 5,
 									borderRadius: 2,
 								}}>
-								<InputLabel id='transaction-type'>Transaction Type</InputLabel>
+								<InputLabel id='transaction-type'>Tag Type</InputLabel>
 								<Select
 									labelId='transaction-type'
 									id='transaction-type'
